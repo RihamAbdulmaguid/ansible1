@@ -1,1 +1,2 @@
-# ansible1
+# Ansible playbook that installs and runs redmine application.
+
