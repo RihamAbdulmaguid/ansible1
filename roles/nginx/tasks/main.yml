@@ -1,0 +1,43 @@
+---
+- name: stop apache server
+  service: name=apache2 state=stopped 
+# Passenger repository setup.
+- name: Add Passenger apt key
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: 561F9B9CAC40B2F7
+    state: present
+- name: Add apt HTTPS capabilities.
+  apt: name=apt-transport-https state=present
+
+- name: Add Phusion apt repo.
+  apt_repository:
+    repo: 'deb https://oss-binaries.phusionpassenger.com/apt/passenger xenial main'
+    state: present
+    update_cache: yes
+
+# Nginx and passenger installation.
+- name: Install Nginx and Passenger.
+  apt: name={{ item }} state=present
+  with_items:
+   - libc6
+   - libexpat1
+   - libgd3
+   - libgeoip1
+   - perl
+   - perlapi-5.22.1
+   - nginx-extras
+   - passenger
+   
+
+# Nginx and passenger configuration.
+- name: Copy Nginx configuration into place.
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+
+- name: conf sites-available
+  template: src=myconfsite.j2 dest=/etc/nginx/sites-available/default mode=0644
+
+  notify: restart nginx
+

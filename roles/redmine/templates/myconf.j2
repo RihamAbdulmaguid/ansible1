@@ -1,0 +1,11 @@
+production:
+  #adapter: sqlite3
+  adapter: mysql2
+  database: {{ DB_name }}
+#  database: /var/lib/dbconfig-common/sqlite3/redmine/instances/default/redmine_default
+  host: localhost
+# port:
+  username: {{ user_name }}
+  password: {{ user_pass }}
+  encoding: utf8
+

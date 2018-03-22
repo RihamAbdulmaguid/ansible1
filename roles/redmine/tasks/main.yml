@@ -1,0 +1,77 @@
+---
+- name: database configuration
+  template: src=myconf.j2 dest=/etc/redmine/default/database.yml mode=0644
+
+
+- name: installing dependencies
+  apt: name={{ item }} state=present
+  with_items:
+    - libmysqlclient-dev 
+    - imagemagick
+    - libmagickwand-dev 
+    - libcurl4-openssl-dev
+    - git-core
+    - subversion 
+    - build-essential
+    - ruby-dev
+    - ruby
+    - ruby-openid
+  become: yes
+
+- name: create redmine group
+  group: name=redmine state=present
+
+- name: create redmine user
+  user: name=redmine shell=/bin/bash group=redmine groups=redmine home=/srv/redmine state=present
+
+- name: installing redmine
+  apt: name=redmine state=present
+  become: true
+- name: chmod on /etc/redmine/default
+  shell: chmod -R o+rw /etc/redmine/default
+
+- name: get rvm keys
+  command: gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
+
+- name: curl rvm
+  get_url: url=https://get.rvm.io dest=/tmp/rvm.sh
+
+- name: install rvm and ruby
+  command: bash /tmp/rvm.sh stable
+
+- name: install ruby {{ ruby_ver | default('2.2.3') }}
+  command: /usr/local/rvm/bin/rvm install "{{ ruby_ver }}"
+  
+
+- name: rvm use {{ ruby_ver | default('2.2.3') }}
+  command: /usr/local/rvm/bin/rvm  "{{ ruby_ver }}"
+  
+- name: bundler install dependencies
+  shell: bundle install --without development test
+  args: 
+    chdir: /usr/share/redmine
+    creates: /usr/lib/ruby/vendor_ruby/rails/generators/rails/app/templates/bin/bundle
+  become: true
+- name: generate session store secret
+  shell: bundle exec rake generate_secret_token 
+  args: 
+    chdir: /usr/share/redmine
+    creates: /usr/lib/ruby/vendor_ruby/rails/generators/rails/app/templates/bin/rake
+  become: true
+- name: database migrations
+  shell: RAILS_ENV=production bundle exec rake db:migrate
+  args: 
+    chdir: /usr/share/redmine
+    creates: /usr/lib/ruby/vendor_ruby/rails/generators/rails/app/templates/bin/rake
+  become: true
+
+- name: load default dataset
+  shell: RAILS_ENV=production bundle exec rake redmine:load_default_data
+  args:
+    chdir: /usr/share/redmine
+    creates: /usr/lib/ruby/vendor_ruby/rails/generators/rails/app/templates/bin/rake
+  become: true
+
+  
+
+

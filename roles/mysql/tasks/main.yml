@@ -1,0 +1,35 @@
+---
+- name: installing my sql
+  apt: name=mysql-server state=present
+- name: installing MySQL_python
+  apt: name=python-mysqldb state=present
+- name: configuration
+  template: src=myconf.j2 dest=/etc/mysql/mysql.conf.d/mysqld.cnf mode=0644
+- name: copy .my.cnf file
+  template: src=~/.my.cnf dest=/root/.my.cnf owner=root
+  notify: restart 
+#- name: set authorized key
+  #authorized_key:
+    #user: ubuntu
+    #state: present
+    #key: "{{ lookup('file', '/home/ubuntu/.ssh/id_rsa.pub') }}"
+- name: root password
+  mysql_user:
+    name: root
+    password: "{{ mysql_password }}"
+    state: present
+
+- name: add user
+  mysql_user: 
+    name: "{{ user_name }}"
+    password: "{{ user_pass }}"
+    state: present
+    priv: '*.*:ALL'
+- name: create new DB
+  mysql_db:
+    name: "{{ DB_name }}"
+    state: present 
+    
+
+
+   
