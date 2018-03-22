@@ -1,0 +1,18 @@
+---
+- hosts: all
+  become: yes
+  remote_user: ubuntu
+ 
+
+  tasks:
+    - name: set authorized key 
+      authorized_key:
+        user: ubuntu
+        state: present
+        key: "{{ lookup('file', '/home/riham/.ssh/id_rsa.pub') }}"
+  roles:
+    - nginx
+    - mysql
+    - redmine
+
+

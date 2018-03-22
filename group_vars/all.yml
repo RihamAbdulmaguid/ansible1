@@ -1,0 +1,8 @@
+a: 14M
+b: 14M
+c: 190K
+d: 6
+mysql_password: 123_RN
+user_name: redmine
+user_pass: redmine
+DB_name: redmine
